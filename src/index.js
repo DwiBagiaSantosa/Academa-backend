@@ -3,11 +3,14 @@ import dotenv from "dotenv"
 import cors from "cors"
 import bodyParser from "body-parser";
 import globalRoutes from "./routes/globalRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import connectDB from "./utils/database.js";
 
 const app = express();
 
 dotenv.config();
 
+connectDB();
 
 const port = 3000;
 
@@ -16,6 +19,7 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 app.use('/api', globalRoutes);
+app.use('/api/v1', authRoutes)
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
