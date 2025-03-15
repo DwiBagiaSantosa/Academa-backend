@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import globalRoutes from "./routes/globalRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import connectDB from "./utils/database.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(express.static('public'));
 
 app.use('/api', globalRoutes);
 app.use('/api/v1', authRoutes)
+app.use('/api/v1', paymentRoutes)
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
