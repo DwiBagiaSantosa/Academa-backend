@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
 import userModel from "../models/userModel.js"
-import TranscationModel from "../models/transactionModel.js"
+import transcationModel from "../models/transactionModel.js"
+import jwt from "jsonwebtoken"
 
 export const signUpAction = async (req, res) => {
     const midtransUrl = process.env.MIDTRANS_URL
@@ -21,7 +22,7 @@ export const signUpAction = async (req, res) => {
         })
 
         // action payment gateway
-        const transaction = new TranscationModel({
+        const transaction = new transcationModel({
             user: user._id,
             price: 280000
         })
@@ -62,6 +63,66 @@ export const signUpAction = async (req, res) => {
         })
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        })
+    }
+}
+
+export const signInAction = async (req, res) => {
+    try {
+        const body = req.body
+
+        const existingUser = await userModel.findOne().where("email").equals(body.email)
+
+        if (!existingUser) {
+            return res.status(400).json({
+                message: "User not found"
+            })
+        }
+
+        const comparePassword = bcrypt.compareSync(body.password, existingUser.password)
+
+        if (!comparePassword) {
+            return res.status(400).json({
+                message: "Invalid email or password"
+            })
+        }
+
+        const isValidUser = await transcationModel.findOne({
+            user: existingUser._id,
+            status: "success"
+        })
+
+        if (existingUser.role !== "student" && !isValidUser) {
+            return res.status(400).json({
+                message: "User not verified"
+            })
+        }
+
+        const token = jwt.sign(
+            {
+                data: {
+                    id: existingUser._id.toString(),
+                }
+            },
+            process.env.SECRET_KEY_JWT,
+            {
+                expiresIn: "1 days"
+            }
+        )
+
+        return res.json({
+            message: "Sign in success",
+            data: {
+                name: existingUser.name,
+                email: existingUser.email,
+                token,
+                role: existingUser.role
+            }
+        })
+    } catch (error) {
+        console.log("🚀 ~ signInAction ~ error:", error)
         return res.status(500).json({
             message: "Internal Server Error",
         })
