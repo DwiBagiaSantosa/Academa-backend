@@ -2,7 +2,7 @@ import multer from "multer";
 
 export const fileStorageCourse =  multer.diskStorage({
     destination: (req, file, cb) => {
-        cb("public/uploads/courses")
+        cb(null,"public/uploads/courses")
     },
     filename: (req, file, cb) => {
         const ext = file.originalname.split('.')[1]
