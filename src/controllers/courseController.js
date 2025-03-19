@@ -43,7 +43,6 @@ export const createCourse = async (req, res) => {
     try {
         const body = req.body
 
-        console.log(req.file);
         const parse = mutateCourseSchema.safeParse(body)
 
         if (!parse.success) {
@@ -98,6 +97,54 @@ export const createCourse = async (req, res) => {
         return res.json({
             message: "Create course success",
             data: course
+        })
+    } catch (error) {
+        console.log("🚀 ~ createCourse ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
+export const updateCourse = async (req, res) => {
+    try {
+        const body = req.body
+        const courseId = req.params.id
+
+        const parse = mutateCourseSchema.safeParse(body)
+
+        if (!parse.success) {
+            const errorMessage = parse.error.issues.map((err) => err.message)
+
+            if (req?.file.path && fs.existsSync(req?.file?.path)) {
+                fs.unlinkSync(req?.file?.path)
+            }
+
+            return res.status(500).json({
+                message: "Error Validation",
+                data: null,
+                error: errorMessage
+            })
+        }
+
+        const category = await categoryModel.findById(parse.data.categoryId)
+        const oldCourse = await courseModel.findById(courseId)
+
+        if (!category) {
+            return res.status(500).json({
+                message: "Category not found",
+            })
+        }
+
+        await courseModel.findByIdAndUpdate(courseId, {
+            name: parse.data.name,
+            category: category._id,
+            description: parse.data.description,
+            tagline: parse.data.tagline,
+            thumbnail: req?.file ? req.file?.filename: oldCourse.thumbnail,
+            manager: req.user._id
+        })
+
+        return res.json({
+            message: "Courses update success",
         })
     } catch (error) {
         console.log("🚀 ~ createCourse ~ error:", error)

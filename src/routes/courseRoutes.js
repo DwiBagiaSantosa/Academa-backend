@@ -1,5 +1,5 @@
 import express from "express";
-import { createCourse, getCourses } from "../controllers/courseController.js";
+import { createCourse, getCourses, updateCourse } from "../controllers/courseController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import multer from "multer";
 import { fileStorageCourse, fileFilter } from "../utils/multer.js";
@@ -13,5 +13,6 @@ const upload = multer({
 
 courseRoutes.get("/courses", verifyToken, getCourses)
 courseRoutes.post("/courses", verifyToken, upload.single('thumbnail'), createCourse)
+courseRoutes.put("/courses/:id", verifyToken, upload.single('thumbnail'), updateCourse )
 
 export default courseRoutes;
