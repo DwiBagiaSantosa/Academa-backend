@@ -40,6 +40,20 @@ export const getCourses = async (req, res) => {
     }
 }
 
+export const getCategories = async (req, res) => {
+    try {
+        const categories = await categoryModel.find()
+
+        return res.status(200).json({
+            message: "Get categories success",
+            data: categories
+        })
+    } catch (error) {
+        console.log("🚀 ~ getCategories ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
 export const createCourse = async (req, res) => {
     try {
         const body = req.body
