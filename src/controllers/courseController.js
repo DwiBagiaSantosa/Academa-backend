@@ -239,3 +239,29 @@ export const createCourseContent = async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" })
     }
 }
+
+export const updateCourseContent = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const body = req.body
+
+        const course = await courseModel.findById(body.courseId)
+
+        const updatedContent = await courseDetailModel.findByIdAndUpdate(id, {
+            title: body.title,
+            type: body.type,
+            course: course._id,
+            text: body.text,
+            youtubeIdId: body.youtubeId
+        }, {new: true})
+
+        return res.json({
+            message: "Update content success",
+            data: updatedContent
+        })
+    } catch (error) {
+        console.log("🚀 ~ deleteCourse ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
