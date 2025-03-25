@@ -1,5 +1,5 @@
 import express from "express";
-import { createCourse, getCourses, updateCourse, deleteCourse, getCategories, getCourseById, createCourseContent, updateCourseContent } from "../controllers/courseController.js";
+import { createCourse, getCourses, updateCourse, deleteCourse, getCategories, getCourseById, createCourseContent, updateCourseContent, deleteCourseContent } from "../controllers/courseController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import multer from "multer";
 import { fileStorageCourse, fileFilter } from "../utils/multer.js";
@@ -22,5 +22,6 @@ courseRoutes.delete("/courses/:id", verifyToken, deleteCourse)
 
 courseRoutes.post("/courses/contents", verifyToken, validateRequest(mutateContentSchema), createCourseContent)
 courseRoutes.put("/courses/contents/:id", verifyToken, validateRequest(mutateContentSchema), updateCourseContent)
+courseRoutes.delete("/courses/contents/:id", verifyToken, deleteCourseContent)
 
 export default courseRoutes;
