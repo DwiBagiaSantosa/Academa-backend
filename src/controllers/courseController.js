@@ -58,11 +58,30 @@ export const getCategories = async (req, res) => {
 export const getCourseById = async (req, res) => {
     try {
         const { id } = req.params
-        const course = await courseModel.findById(id).populate('details')
+        const { preview } = req.query
+
+        const course = await courseModel.findById(id)
+        .populate({
+            path: 'category',
+            select: 'name -_id'
+        })
+        .populate({
+            path: 'manager',
+            select: 'name'
+        })
+        .populate({
+            path: 'details',
+            select: preview === "true" ? 'title type youtubeId text' : 'title type'
+        })
+
+        const imageUrl = process.env.APP_URL + '/uploads/courses/'
 
         return res.status(200).json({
             message: "Get course detail success",
-            data: course
+            data: {
+                ...course.toObject(),
+                thumbnail_url: imageUrl + course.thumbnail
+            }
         })
     } catch (error) {
         console.log("🚀 ~ getCourseById ~ error:", error)
