@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import courseModel from "./courseModel.js";
 
 const courseDetailModel = new mongoose.Schema({
     title: {
@@ -10,7 +11,7 @@ const courseDetailModel = new mongoose.Schema({
         enum: ["video", "text"],
         default: "video"
     },
-    videoId: String,
+    youtubeId: String,
     text: String,
     course: {
         type: mongoose.Schema.Types.ObjectId,
@@ -18,6 +19,16 @@ const courseDetailModel = new mongoose.Schema({
     }
 }, {
     timestamps: true
+})
+
+courseDetailModel.post('findOneAndDelete', async function (doc) {
+    if (doc) {
+        await courseModel.findByIdAndUpdate(doc.course, {
+            $pull: {
+                details: doc._id
+            }
+        })
+    }
 })
 
 export default mongoose.model("CourseDetail", courseDetailModel);
