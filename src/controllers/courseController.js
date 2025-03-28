@@ -238,7 +238,7 @@ export const createCourseContent = async (req, res) => {
             type: body.type,
             course: course._id,
             text: body.text,
-            youtubeIdId: body.youtubeId
+            youtubeId: body.youtubeId
         })
 
         await content.save()
@@ -293,6 +293,22 @@ export const deleteCourseContent = async (req, res) => {
 
         return res.json({
             message: "Delete content success",
+        })
+    } catch (error) {
+        console.log("🚀 ~ deleteCourse ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
+export const getDetailContent = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const content = await courseDetailModel.findById(id)
+
+        return res.json({
+            message: "Get Course detail content success",
+            data: content
         })
     } catch (error) {
         console.log("🚀 ~ deleteCourse ~ error:", error)
