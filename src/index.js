@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import connectDB from "./utils/database.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api', globalRoutes);
 app.use('/api/v1', authRoutes)
 app.use('/api/v1', paymentRoutes)
 app.use('/api/v1', courseRoutes)
+app.use('/api/v1', studentRoutes)
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
