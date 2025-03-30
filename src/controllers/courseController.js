@@ -272,7 +272,7 @@ export const updateCourseContent = async (req, res) => {
             type: body.type,
             course: course._id,
             text: body.text,
-            youtubeIdId: body.youtubeId
+            youtubeId: body.youtubeId
         }, {new: true})
 
         return res.json({
