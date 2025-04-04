@@ -315,3 +315,74 @@ export const getDetailContent = async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" })
     }
 }
+
+export const getStudentByCourseId = async (req, res) => {
+    try {
+        const {id} = req.params
+
+        const course = await courseModel.findById(id).select('name').populate({
+            path: 'students',
+            select: 'name email photo'
+        })
+
+        return res.json({
+            message: "Get student by course id success",
+            data: course
+        })
+    } catch (error) {
+        console.log("🚀 ~ getStudentByCourseId ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
+export const addStudentToCourse = async (req, res) => {
+    try {
+        const {id} = req.params
+        const body = req.body
+
+        await userModel.findByIdAndUpdate(body.studentId, {
+            $push: {
+                courses: id
+            }
+        })
+
+        await courseModel.findByIdAndUpdate(id, {
+            $push: {
+                students: body.studentId
+            }
+        })
+
+        return res.json({
+            message: "Add student to course success",
+        })
+    } catch (error) {
+        console.log("🚀 ~ addStudentToCourse ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
+export const deleteStudentFromCourse = async (req, res) => {
+    try {
+        const {id} = req.params
+        const body = req.body
+
+        await userModel.findByIdAndUpdate(body.studentId, {
+            $pull: {
+                courses: id
+            }
+        })
+
+        await courseModel.findByIdAndUpdate(id, {
+            $pull: {
+                students: body.studentId
+            }
+        })
+
+        return res.json({
+            message: "Delete student to course success",
+        })
+    } catch (error) {
+        console.log("🚀 ~ deleteStudentToCourse ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
