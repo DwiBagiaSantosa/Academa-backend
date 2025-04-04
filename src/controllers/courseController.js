@@ -330,6 +330,33 @@ export const getStudentByCourseId = async (req, res) => {
             data: course
         })
     } catch (error) {
-        
+        console.log("🚀 ~ getStudentByCourseId ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
+export const addStudentToCourse = async (req, res) => {
+    try {
+        const {id} = req.params
+        const body = req.body
+
+        await userModel.findByIdAndUpdate(body.studentId, {
+            $push: {
+                courses: id
+            }
+        })
+
+        await courseModel.findByIdAndUpdate(id, {
+            $push: {
+                students: body.studentId
+            }
+        })
+
+        return res.json({
+            message: "Add student to course success",
+        })
+    } catch (error) {
+        console.log("🚀 ~ addStudentToCourse ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
     }
 }
