@@ -325,9 +325,19 @@ export const getStudentByCourseId = async (req, res) => {
             select: 'name email photo'
         })
 
+        const students = course.students.map((item) => {
+            return {
+                ...item.toObject(),
+                photo_url: process.env.APP_URL + '/uploads/students/' + item.photo
+            }
+        })
+
         return res.json({
             message: "Get student by course id success",
-            data: course
+            data: {
+                ...course.toObject(),
+                students
+            }
         })
     } catch (error) {
         console.log("🚀 ~ getStudentByCourseId ~ error:", error)
