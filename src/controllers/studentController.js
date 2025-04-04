@@ -29,6 +29,22 @@ export const getStudents = async (req, res) => {
     }
 }
 
+export const getStudentById = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const student = await userModel.findById(id).select('name email')
+
+        return res.json({
+            message: "Get detail student success",
+            data: student
+        })
+    } catch (error) {
+        console.log("🚀 ~ getStudents ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
 export const createStudent = async (req, res) => {
     try {
         const body = req.body
