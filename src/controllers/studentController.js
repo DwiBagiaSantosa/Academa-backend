@@ -167,3 +167,31 @@ export const deleteStudent = async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" })
     }
 }
+
+export const getCourseByStudentId = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user._id).populate({
+            path: "courses",
+            select: "name category thumbnail",
+            populate: {
+                path: "category",
+                select: "name"
+            }
+        })
+
+        const response = user?.courses?.map((item) => {
+            return {
+                ...item.toObject(),
+                thumbnail_url: process.env.APP_URL + '/uploads/courses/' + item.thumbnail
+            }
+        })
+
+        return res.json({
+            message: "Get course by student id success",
+            data: response
+        })
+    } catch (error) {
+        console.log("🚀 ~ getCourseByStudentId ~ error:", error)
+        return res.status(500).json({ error: "Internal Server Error" })
+    }
+}
