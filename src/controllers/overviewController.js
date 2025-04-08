@@ -51,12 +51,12 @@ export const getOverview = async (req, res) => {
             select: 'name'
         })
 
-        const imageUrl = process.env.APP_URL + '/uploads/courses/'
+        // const imageUrl = process.env.APP_URL + '/uploads/courses/'
 
         const responseCourses = coursesList.map((item) => {
             return {
                 ...item.toObject(),
-                thumbnail: imageUrl + item.thumbnail,
+                // thumbnail: imageUrl + item.thumbnail,
                 total_students: item.students.length
             }
         })
@@ -69,7 +69,7 @@ export const getOverview = async (req, res) => {
         const responseStudents = students.map((item) => {
             return {
                 ...item.toObject(),
-                photo_url: process.env.APP_URL + '/uploads/students/' + item.photo
+                // photo_url: process.env.APP_URL + '/uploads/students/' + item.photo
             }
         })
 

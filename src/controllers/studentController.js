@@ -4,6 +4,7 @@ import { mutateStudentSchema } from "../utils/schema.js"
 import courseModel from "../models/courseModel.js"
 import fs from "fs"
 import path from "path"
+import { deleteImage, uploadImage } from "../utils/cloudinaryService.js"
 
 export const getStudents = async (req, res) => {
     try {
@@ -15,7 +16,7 @@ export const getStudents = async (req, res) => {
         const response = students.map((item) => {
             return {
                 ...item.toObject(),
-                photo_url: process.env.APP_URL + '/uploads/students/' + item.photo
+                // photo_url: process.env.APP_URL + '/uploads/students/' + item.photo
             }
         })
 
@@ -54,9 +55,9 @@ export const createStudent = async (req, res) => {
         if (!parse.success) {
             const errorMessage = parse.error.issues.map((err) => err.message)
 
-            if (req?.file.path && fs.existsSync(req?.file?.path)) {
-                fs.unlinkSync(req?.file?.path)
-            }
+            // if (req?.file.path && fs.existsSync(req?.file?.path)) {
+            //     fs.unlinkSync(req?.file?.path)
+            // }
 
             return res.status(500).json({
                 message: "Error Validation",
@@ -67,11 +68,22 @@ export const createStudent = async (req, res) => {
 
         const hashPassword = bcrypt.hashSync(body.password, 12)
 
+        let photo = null
+
+        if (req.file) {
+            const result = await uploadImage(req.file.buffer, { folder: "students" })
+
+            photo = {
+                public_id: result.public_id,
+                url: result.secure_url
+            }
+        }
+
         const student = new userModel({
             name: parse.data.name,
             email: parse.data.email,
             password: hashPassword,
-            photo: req.file?.filename,
+            photo,
             manager: req.user?._id,
             role: "student"
         })
@@ -99,9 +111,9 @@ export const updateStudent = async (req, res) => {
         if (!parse.success) {
             const errorMessage = parse.error.issues.map((err) => err.message)
 
-            if (req?.file.path && fs.existsSync(req?.file?.path)) {
-                fs.unlinkSync(req?.file?.path)
-            }
+            // if (req?.file.path && fs.existsSync(req?.file?.path)) {
+            //     fs.unlinkSync(req?.file?.path)
+            // }
 
             return res.status(500).json({
                 message: "Error Validation",
@@ -112,13 +124,34 @@ export const updateStudent = async (req, res) => {
 
         const student = await userModel.findById(id)
 
+        if (!student) {
+            return res.status(404).json({
+                message: "Student not found"
+            })
+        }
+
         const hashPassword = parse.data?.password ? bcrypt.hashSync(parse.data.password, 12) : student.password
+
+        let updatedPhoto = student.photo;
+
+        if (req.file) {
+            if (student.photo?.public_id) {
+                await deleteImage(student.photo.public_id)
+            }
+
+            const result = await uploadImage(req.file.buffer, { folder: "students" })
+
+            updatedPhoto = {
+                url: result.secure_url,
+                public_id: result.public_id
+            }
+        }
 
         const updatedStudent = await userModel.findByIdAndUpdate(id, {
             name: parse.data.name,
             email: parse.data.email,
             password: hashPassword,
-            photo: req.file ? req.file?.filename : student.photo,
+            photo: updatedPhoto,
         }, { new: true })
 
         

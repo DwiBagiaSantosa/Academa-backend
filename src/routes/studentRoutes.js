@@ -6,9 +6,11 @@ import { fileFilter, fileStorage } from "../utils/multer.js";
 
 const studentRoutes = express.Router();
 
+const storage = multer.memoryStorage();
+
 const upload = multer({
-    storage: fileStorage('students'),
-    fileFilter
+    storage: storage,
+    // fileFilter
 })
 
 studentRoutes.get('/students', verifyToken, getStudents)

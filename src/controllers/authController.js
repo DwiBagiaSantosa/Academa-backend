@@ -15,50 +15,71 @@ export const signUpAction = async (req, res) => {
 
         const user = new userModel({
             name: body.name,
-            photo: "default.png",
+            photo: {
+                url: "default.png",
+                public_id: "default"
+            },
             email: body.email,
             password: hashPassword,
-            role: "manager"
+            role: body.role
         })
 
         // action payment gateway
-        const transaction = new transcationModel({
-            user: user._id,
-            price: 280000
-        })
+        // const transaction = new transcationModel({
+        //     user: user._id,
+        //     price: 280000
+        // })
 
-        const midtrans = await fetch(midtransUrl, {
-            method: "POST",
-            body: JSON.stringify({
-                transaction_details: {
-                    order_id: transaction._id.toString(),
-                    gross_amount: transaction.price
-                },
-                credit_card:{
-                    secure : true
-                },
-                customer_details: {
-                    email: user.email,
-                },
-                callbacks:{
-                    finish: `${frontendUrl}/success-checkout`
-                }
-            }),
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Basic ${midtransAuthString}`
-            }
-        })
+        // const midtrans = await fetch(midtransUrl, {
+        //     method: "POST",
+        //     body: JSON.stringify({
+        //         transaction_details: {
+        //             order_id: transaction._id.toString(),
+        //             gross_amount: transaction.price
+        //         },
+        //         credit_card:{
+        //             secure : true
+        //         },
+        //         customer_details: {
+        //             email: user.email,
+        //         },
+        //         callbacks:{
+        //             finish: `${frontendUrl}/success-checkout`
+        //         }
+        //     }),
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //         "Authorization": `Basic ${midtransAuthString}`
+        //     }
+        // })
 
-        const resMidtrans = await midtrans.json()
+        // const resMidtrans = await midtrans.json()
 
         await user.save()
-        await transaction.save()
+        
+        const token = jwt.sign(
+            {
+                data: {
+                    id: user._id.toString(),
+                }
+            },
+            process.env.SECRET_KEY_JWT,
+            {
+                expiresIn: "1d"
+            }
+        )
+
+        // await transaction.save()
+
+        const { name, email, role } = user
 
         return res.json({
             message: "sign up success",
             data: {
-                midtrans_payment_url: resMidtrans.redirect_url
+                name,
+                email,
+                role,
+                token
             }
         })
     } catch (error) {
@@ -89,16 +110,16 @@ export const signInAction = async (req, res) => {
             })
         }
 
-        const isValidUser = await transcationModel.findOne({
-            user: existingUser._id,
-            status: "success"
-        })
+        // const isValidUser = await transcationModel.findOne({
+        //     user: existingUser._id,
+        //     status: "success"
+        // })
 
-        if (existingUser.role !== "student" && !isValidUser) {
-            return res.status(400).json({
-                message: "User not verified"
-            })
-        }
+        // if (existingUser.role !== "student" && !isValidUser) {
+        //     return res.status(400).json({
+        //         message: "User not verified"
+        //     })
+        // }
 
         const token = jwt.sign(
             {

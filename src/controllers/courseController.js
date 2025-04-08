@@ -1,10 +1,13 @@
 import courseModel from "../models/courseModel.js"
 import categoryModel from "../models/categoryModel.js"
-import { mutateCourseSchema } from "../utils/schema.js"
+import { categorySchema, mutateCourseSchema } from "../utils/schema.js"
 import fs from "fs"
 import userModel from "../models/userModel.js"
 import path from "path"
 import courseDetailModel from "../models/courseDetailModel.js"
+import streamifier from "streamifier";
+import { v2 as cloudinary } from "cloudinary";
+import { deleteImage, uploadImage } from "../utils/cloudinaryService.js"
 
 export const getCourses = async (req, res) => {
     try {
@@ -21,12 +24,12 @@ export const getCourses = async (req, res) => {
             select: 'name'
         })
 
-        const imageUrl = process.env.APP_URL + '/uploads/courses/'
+        // const imageUrl = process.env.APP_URL + '/uploads/courses/'
 
         const response = courses.map((item) => {
             return {
                 ...item.toObject(),
-                thumbnail: imageUrl + item.thumbnail,
+                // thumbnail: imageUrl + item.thumbnail,
                 total_students: item.students.length
             }
         })
@@ -55,6 +58,38 @@ export const getCategories = async (req, res) => {
     }
 }
 
+export const createCategory = async (req, res) => {
+    try {
+        const body = req.body
+
+        const parse = categorySchema.safeParse(body)
+
+        if (!parse.success) {
+            const errorMessage = parse.error.issues.map((err) => err.message)
+
+            return res.status(4000).json({
+                message: "Error Validation",
+                data: null,
+                error: errorMessage
+            })
+        }
+
+        const category = new categoryModel({
+            name: parse.data.name
+        })
+
+        await category.save()
+
+        return res.status(200).json({
+            message: "Create category success",
+            data: category
+        })
+
+    } catch (error) {
+        
+    }
+}
+
 export const getCourseById = async (req, res) => {
     try {
         const { id } = req.params
@@ -62,11 +97,11 @@ export const getCourseById = async (req, res) => {
 
         const course = await courseModel.findById(id)
         .populate({
-            path: 'category',
-            select: 'name -_id'
+            path: 'manager',
+            select: 'name'
         })
         .populate({
-            path: 'manager',
+            path: 'category',
             select: 'name'
         })
         .populate({
@@ -80,7 +115,7 @@ export const getCourseById = async (req, res) => {
             message: "Get course detail success",
             data: {
                 ...course.toObject(),
-                thumbnail_url: imageUrl + course.thumbnail
+                // thumbnail_url: imageUrl + course.thumbnail
             }
         })
     } catch (error) {
@@ -98,9 +133,9 @@ export const createCourse = async (req, res) => {
         if (!parse.success) {
             const errorMessage = parse.error.issues.map((err) => err.message)
 
-            if (req?.file.path && fs.existsSync(req?.file?.path)) {
-                fs.unlinkSync(req?.file?.path)
-            }
+            // if (req?.file.path && fs.existsSync(req?.file?.path)) {
+            //     fs.unlinkSync(req?.file?.path)
+            // }
 
             return res.status(500).json({
                 message: "Error Validation",
@@ -117,12 +152,24 @@ export const createCourse = async (req, res) => {
             })
         }
 
+        // upload image to cloudinary
+        let thumbnail = null;
+
+        if (req.file) {
+            const result = await uploadImage(req.file.buffer, { folder: 'courses' })
+            
+            thumbnail = {
+                url: result.secure_url,
+                public_id: result.public_id
+            }
+        }
+
         const course = new courseModel({
             name: parse.data.name,
             category: category._id,
             description: parse.data.description,
             tagline: parse.data.tagline,
-            thumbnail: req.file.filename,
+            thumbnail,
             manager: req.user._id
         })
 
@@ -164,11 +211,11 @@ export const updateCourse = async (req, res) => {
         if (!parse.success) {
             const errorMessage = parse.error.issues.map((err) => err.message)
 
-            if (req?.file.path && fs.existsSync(req?.file?.path)) {
-                fs.unlinkSync(req?.file?.path)
-            }
+            // if (req?.file.path && fs.existsSync(req?.file?.path)) {
+            //     fs.unlinkSync(req?.file?.path)
+            // }
 
-            return res.status(500).json({
+            return res.status(400).json({
                 message: "Error Validation",
                 data: null,
                 error: errorMessage
@@ -179,9 +226,26 @@ export const updateCourse = async (req, res) => {
         const oldCourse = await courseModel.findById(courseId)
 
         if (!category) {
-            return res.status(500).json({
+            return res.status(404).json({
                 message: "Category not found",
             })
+        }
+
+        let thumbnail = oldCourse.thumbnail
+
+        if (req.file) {
+            // delete old image from cloudinary
+            if (oldCourse.thumbnail?.public_id){
+                await deleteImage(oldCourse.thumbnail.public_id)
+            }
+
+            // upload new image to cloudinary
+            const result = await uploadImage(req.file.buffer, { folder: 'courses' })
+            
+            thumbnail = {
+                url: result.secure_url,
+                public_id: result.public_id
+            }
         }
 
         await courseModel.findByIdAndUpdate(courseId, {
@@ -189,7 +253,7 @@ export const updateCourse = async (req, res) => {
             category: category._id,
             description: parse.data.description,
             tagline: parse.data.tagline,
-            thumbnail: req?.file ? req.file?.filename: oldCourse.thumbnail,
+            thumbnail,
             manager: req.user._id
         })
 
@@ -208,12 +272,17 @@ export const deleteCourse = async (req, res) => {
 
         const course = await courseModel.findById(id)
 
-        const dirname = path.resolve()
+        // const dirname = path.resolve()
 
-        const filePath = path.join(dirname, "public/uploads/courses", course.thumbnail)
+        // const filePath = path.join(dirname, "public/uploads/courses", course.thumbnail)
 
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath)
+        // if (fs.existsSync(filePath)) {
+        //     fs.unlinkSync(filePath)
+        // }
+
+        // delete image from cloudinary
+        if (course?.thumbnail?.public_id){
+            await deleteImage(course.thumbnail.public_id)
         }
 
         await courseModel.findByIdAndDelete(id)

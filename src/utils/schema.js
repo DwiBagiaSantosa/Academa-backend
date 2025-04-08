@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const exampleSchema = z.object({
+export const categorySchema = z.object({
     name: z.string().min(4),
 })
 
