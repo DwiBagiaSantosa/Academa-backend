@@ -397,7 +397,7 @@ export const getStudentByCourseId = async (req, res) => {
         const students = course.students.map((item) => {
             return {
                 ...item.toObject(),
-                photo_url: process.env.APP_URL + '/uploads/students/' + item.photo
+                // photo_url: process.env.APP_URL + '/uploads/students/' + item.photo
             }
         })
 

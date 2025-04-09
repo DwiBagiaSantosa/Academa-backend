@@ -11,7 +11,7 @@ export const signUpAction = async (req, res) => {
     try {
         const body = req.body
 
-        const hashPassword = await bcrypt.hashSync(body.password, 12)
+        const hashPassword = bcrypt.hashSync(body.password, 12)
 
         const user = new userModel({
             name: body.name,
@@ -21,7 +21,7 @@ export const signUpAction = async (req, res) => {
             },
             email: body.email,
             password: hashPassword,
-            role: body.role
+            role: 'manager' // for future feature change it to body.role
         })
 
         // action payment gateway
