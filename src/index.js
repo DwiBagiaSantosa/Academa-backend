@@ -28,6 +28,13 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
+app.get("/", (req, res) => {
+    res.json({
+        message: "Welcome to Academa API"
+    })
+});
+
+// Parent routes
 app.use('/api/v1', authRoutes)
 app.use('/api/v1', paymentRoutes)
 app.use('/api/v1', courseRoutes)
